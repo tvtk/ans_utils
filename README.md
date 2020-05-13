@@ -1,26 +1,24 @@
 # ans_utils
 Miscelaneous Ansible utilities
 
-play.sh
-=======
+## play.sh
 Bash utility to execute Ansible playbooks while generating verbous logs
 for eventual debugging and preserving them under logs/
 #
 - initially imported version "play_v03.sh" from 2019/02/13
 
-ans_take_ctrl.sh
-ans-take-ctrl_v03.yml
-ans_robot.conf
-==============
-Bash & Ansible tool, which
+## ans_take_ctrl.sh, ans-take-ctrl_v03.yml, ans_robot.conf
+Bash & Ansible tool, which:
 - generates new ssh key-pair (without passphrase) for selected target node
 - creates "ans_robot" user account on target (no password is set)
 - deploys created public key to "ans_robot" on target
-- configures sudo on target to be allowed for "ans_robot" witout limitations and
+- configures sudo on target to be allowed for "ans_robot" without limitations and
    not to require password
+
 Initial ssh account on remote target does not have to be "root" (default) anymore.
 Different username can be (optionally) specified, but it must be allowed to use sudo
 (script will request for sudo password on top)
+
 Beware:
 - it is assumed that Ansible inventory file name is "hosts" and it is present 
    in current working directory

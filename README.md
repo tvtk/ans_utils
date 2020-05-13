@@ -18,6 +18,9 @@ Bash & Ansible tool, which
 - deploys created public key to "ans_robot" on target
 - configures sudo on target to be allowed for "ans_robot" witout limitations and
    not to require password
+Initial ssh account on remote target does not have to be "root" (default) anymore.
+Different username can be (optionally) specified, but it must be allowed to use sudo
+(script will request for sudo password on top)
 Beware:
 - it is assumed that Ansible inventory file name is "hosts" and it is present 
    in current working directory
@@ -26,4 +29,5 @@ Beware:
    it must point to existing (& writeable) directory
 #
 - initial imported version from 2018/03/06
+- imported generalized version from 2020/01/30
 

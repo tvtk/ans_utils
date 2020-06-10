@@ -13,4 +13,4 @@ else
    RMT_USR="root"
 fi
 echo "INFO: using \"${RMT_USR}\" as remote user"
-ansible-playbook -i hosts -l "${1}" --user "${RMT_USR}" ans-take-ctrl_v04.yml --ssh-extra-args='-o StrictHostKeyChecking=no' -k -K -e "{\"ansible_user\": \"${RMT_USR}\"}"
+ansible-playbook -i hosts -l "${1}" --user "${RMT_USR}" ans-take-ctrl.yml --ssh-extra-args='-o StrictHostKeyChecking=no' -k -K -e "{\"ansible_user\": \"${RMT_USR}\"}"

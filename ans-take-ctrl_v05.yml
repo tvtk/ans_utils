@@ -10,14 +10,14 @@
     ans_gunam: "ans_robot"
     ans_guid: "9999"
 #    ident_files_dir:  "/root/ansible/idents"
-    pub_key_file: "{{ident_files_dir}}/{{inventory_hostname}}.pub"
+    pub_key_file: "{{ansible_ssh_private_key_file}}.pub"
     sudoers_d_file: "ans_robot.conf"
 
   tasks:
   - name: Generate unique key-pair for the host if it doesn't exist yet
-    local_action: command /usr/bin/ssh-keygen -q -f "{{ident_files_dir}}/{{inventory_hostname}}" -t rsa -N ''
+    local_action: command /usr/bin/ssh-keygen -q -f "{{ansible_ssh_private_key_file}}" -t rsa -N ''
     args:
-      creates: "{{ident_files_dir}}/{{inventory_hostname}}.pub"
+      creates: "{{ansible_ssh_private_key_file}}.pub"
 
   - block:
     - name: create Ansible group on target host

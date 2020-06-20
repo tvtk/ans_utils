@@ -21,6 +21,7 @@ then
 fi
 
 TMSTAMP="$(date +%s)"
-ansible-playbook -vvv -l "${1}" -i hosts -e "ansible_user=ans_robot" "${2}.yml" | tee "logs/${1}/${2}_$(date +%Y%m%dT%H%M%S%z --date=@${TMSTAMP}).log"
-echo "----------------" >> "logs/${1}/${2}_$(date +%Y%m%dT%H%M%S%z --date=@${TMSTAMP}).log"
-date +%Y%m%dT%H%M%S%z >> "logs/${1}/${2}_$(date +%Y%m%dT%H%M%S%z --date=@${TMSTAMP}).log"
+LOG="logs/${1}/$(date +%Y%m%dT%H%M%S%z --date=@${TMSTAMP})_${2}.log"
+ansible-playbook -vvv -l "${1}" -i hosts -e "ansible_user=ans_robot" "${2}.yml" | tee "${LOG}"
+echo "----------------" >> "${LOG}"
+date +%Y%m%dT%H%M%S%z >> "${LOG}"

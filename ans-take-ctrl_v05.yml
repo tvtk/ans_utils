@@ -6,9 +6,10 @@
   
   vars:
 #    ansible_user: "root"
-    ssh_args: "-o StrictHostKeyChecking=no"
+    ssh_args:  "-o StrictHostKeyChecking=no"
     ans_gunam: "ans_robot"
-    ans_guid: "9999"
+    ans_guid:  "9999"
+    dfl_shell: "/bin/bash"
 #    ident_files_dir:  "/root/ansible/idents"
     pub_key_file: "{{ansible_ssh_private_key_file}}.pub"
     sudoers_d_file: "ans_robot.conf"
@@ -24,7 +25,7 @@
       group: name={{ans_gunam}} state=present gid={{ans_guid}}
       become: true
     - name: create Ansible user on target host
-      user: name={{ans_gunam}} state=present uid={{ans_guid}} group={{ans_gunam}}
+      user: name={{ans_gunam}} state=present uid={{ans_guid}} group={{ans_gunam}} shell="{{dfl_shell}}"
     - name: enable NOPASS sudo
       copy: src={{sudoers_d_file}} dest=/etc/sudoers.d/ans_robot owner=root group=root mode=0440
     - name: create .ssh directory

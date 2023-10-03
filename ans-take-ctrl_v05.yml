@@ -16,10 +16,11 @@
 
   tasks:
   - name: Generate unique key-pair for the host if it doesn't exist yet
-    local_action: command /usr/bin/ssh-keygen -q -f "{{ansible_ssh_private_key_file}}" -t rsa -N ''
+    local_action: command /usr/bin/ssh-keygen -q -f "{{ansible_ssh_private_key_file}}" -t ecdsa -b 521 -N ''
     args:
       creates: "{{ansible_ssh_private_key_file}}.pub"
 
+  # operations for Unix/Linux OS
   - block:
     - name: create Ansible group on target host
       group: name={{ans_gunam}} state=present gid={{ans_guid}}
@@ -33,6 +34,26 @@
     - name: copy pub key
       copy: src={{pub_key_file}} dest=/home/{{ans_gunam}}/.ssh/authorized_keys owner={{ans_gunam}} group={{ans_gunam}} mode=0644 setype=ssh_home_t serole=object_r
     become: true
+    when: (ansible_network_os is undefined) or (ansible_network_os != "routeros")
+
+  # operations for MikroTik Router OS
+  - block:
+    - name: Generate random password
+      set_fact:
+        rand_pwd:     "{{ lookup('password', '/dev/null', chars=['ascii_letters', 'digits'], length=14) }}"
+        ssh_pub_key:  "{{ lookup('file', ansible_ssh_private_key_file + '.pub') }}"
+    - debug: msg="random_password {{ans_gunam}} {{rand_pwd}}"
+    - debug: msg="pub_key=\"{{ssh_pub_key}}\""
+##    - name: Create Ansible user on target host
+##      routeros_command: 
+##        commands: /user add name={{ans_gunam}} group=read password={{rand_pwd}}
+##    - name: Add SSH public key for Ansible user on target host
+##      routeros_command: 
+##        commands: 
+##        - /file print file={{ans_gunam}}.pub
+##        - /file set {{ans_gunam}}.pub contents="{{ssh_pub_key}}"
+##        - /user ssh-keys import user={{ans_gunam}}  public-key-file={{ans_gunam}}.pub
+    when: (ansible_network_os is defined) and (ansible_network_os == "routeros")
 
 #  - name: Deposit public key into Ansible user's authorized keys file on remote host
 #    authorized_key: key="{{ident_files_dir}}/{{inventory_hostname}}.pub" user={{ans_gunam}} state=present

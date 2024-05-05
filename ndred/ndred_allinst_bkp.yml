@@ -1,0 +1,95 @@
+---
+- name: Perform backup of Node-RED instances on target
+  hosts: all
+  vars:
+#    bkp_dir_name: "{{ansible_date_time.iso8601_basic_short}}"
+#    nr_fetch_lst:
+#    - ".node-red/.config.nodes.json"
+#    - ".node-red/.config.runtime.json"
+#    - ".node-red/flows*.json"
+#    - ".node-red/flows*_cred.json"
+#    - ".node-red/settings.js"
+
+  tasks:
+  - name: Generate ~fresh dump timestamp string
+    command: /usr/bin/date +%Y%m%dT%H%M00%z
+    register: cur_datetime
+    delegate_to: localhost
+    changed_when: false
+  - set_fact:
+      bkp_dir_name: "{{cur_datetime.stdout}}"
+
+  - name: Find Node-RED instances
+    set_fact:
+      nr_instances: []
+  - block:
+    - block:
+      - set_fact:
+          nr_instances: "{{node_opts[inventory_hostname].ndred.instances}}"
+          nr_instance_names: []
+      - set_fact:
+          nr_instance_names: "{{nr_instance_names + [item.name]}}"
+        with_items: "{{nr_instances}}"
+      when: ("instances" in node_opts[inventory_hostname].ndred)
+    when: ("ndred" in node_opts[inventory_hostname])
+  - name: List Node-RED instances on target
+    debug: msg="nr_instance_names@{{inventory_hostname}}={{nr_instance_names}}"
+
+  - block:
+    - name: Set remote and local backup folder names
+      set_fact:
+        rem_bkp_dir: "{{role_temp_dir}}/ndred_bkp/{{bkp_dir_name}}"
+        loc_bkp_dir: "{{inst_data_base}}/{{inventory_hostname}}/ndred_bkp/{{bkp_dir_name}}"
+    - name: Create main backup folder on target node
+      file: state=directory
+      args:
+        path:   "{{item.path}}"
+        owner:  "{{item.owner}}"
+        group:  "{{item.group}}"
+        mode:   "{{item.mode}}"
+        setype: "{{item.setype}}"
+        seuser: "{{item.seuser}}"
+      with_items:
+      - { path: "{{rem_bkp_dir}}", owner: "{{ansible_user}}", group: "{{ansible_user}}", mode: "0755", setype: "user_home_t", seuser: "unconfined_u" }
+
+    - name: Collect Node-RED config files on target node
+      archive: dest="{{rem_bkp_dir}}/{{item}}.tgz"
+      args:
+        owner:  "{{ansible_user}}"
+        group:  "{{ansible_user}}"
+        ##path:   "{{ [] | zip_longest(nr_fetch_lst, fillvalue=('~'+item+'/')) | map('join') | list }}"
+        path:
+        - "~{{item}}/.node-red/.config.nodes.json"
+        - "~{{item}}/.node-red/.config.runtime.json"
+        - "~{{item}}/.node-red/flows*.json"
+        - "~{{item}}/.node-red/flows*_cred.json"
+        - "~{{item}}/.node-red/settings.js"
+        - "/etc/systemd/system/Node-RED@{{item}}.service.d"
+        - "/var/opt/{{item}}"
+      with_items:
+      - "{{nr_instance_names}}"
+      become: true
+
+    - name: Make sure local destination folder exists
+      local_action: file state=directory
+      args:
+        path:   "{{inst_data_base}}/{{inventory_hostname}}/ndred_bkp/{{bkp_dir_name}}"
+  #      group:  "ansible1"
+  #      mode:   "0770"
+
+    - name: Download created backup files
+      fetch: flat=true
+      args:
+        src:    "{{rem_bkp_dir}}/{{item}}.tgz"
+        dest:   "{{loc_bkp_dir}}/"
+        flat:   true
+      with_items:
+      - "{{nr_instance_names}}"
+
+    - name: Perform cleanup on target
+      file: state=absent
+      args:
+        path: "{{rem_bkp_dir}}"
+
+    when: ((nr_instance_names | length()) > 0)
+
